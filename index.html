@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Company A - Customs Clearance AI Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .confidence-low { background-color: #fee2e2; border-color: #ef4444; }
+        .confidence-mid { background-color: #fef3c7; border-color: #f59e0b; }
+        .confidence-high { background-color: #ecfdf5; border-color: #10b981; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+    <!-- Top Header & Role Switcher -->
+    <header class="bg-slate-900 text-white px-6 py-4 flex items-center justify-between shadow-md">
+        <div class="flex items-center space-x-3">
+            <i data-lucide="ship" class="w-7 h-7 text-blue-400"></i>
+            <div>
+                <h1 class="text-lg font-bold tracking-tight">Company A Customs Operations</h1>
+                <p class="text-xs text-slate-400">Navi Mumbai / Nhava Sheva Automated Document Processing</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-4">
+            <div class="bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700 flex items-center space-x-2">
+                <span class="text-xs text-slate-400">Current Role:</span>
+                <select id="role-selector" onchange="switchRole(this.value)" class="bg-transparent text-xs font-semibold text-blue-400 focus:outline-none cursor-pointer">
+                    <option value="executive" selected class="bg-slate-800 text-white">Documentation Executive</option>
+                    <option value="manager" class="bg-slate-800 text-white">Documentation Manager (Approver)</option>
+                </select>
+            </div>
+            <span id="role-badge" class="px-2.5 py-1 text-xs font-medium rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30">Executive Mode</span>
+        </div>
+    </header>
+
+    <!-- App Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-6 space-y-6">
+        <!-- Dashboard Metrics Banner -->
+        <section class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Hours Saved (MTD)</p>
+                        <h3 class="text-2xl font-bold text-slate-900 mt-1">735 hrs</h3>
+                    </div>
+                    <span class="p-2 bg-blue-50 text-blue-600 rounded-lg"><i data-lucide="clock" class="w-5 h-5"></i></span>
+                </div>
+                <p class="text-xs text-emerald-600 mt-2 font-medium">↑ 66% reduction vs manual entry</p>
+            </div>
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Field AI Accuracy</p>
+                        <h3 class="text-2xl font-bold text-slate-900 mt-1">96.4%</h3>
+                    </div>
+                    <span class="p-2 bg-emerald-50 text-emerald-600 rounded-lg"><i data-lucide="check-circle-2" class="w-5 h-5"></i></span>
+                </div>
+                <p class="text-xs text-emerald-600 mt-2 font-medium">Target 95% exceeded</p>
+            </div>
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Amended BoE Risk</p>
+                        <h3 class="text-2xl font-bold text-slate-900 mt-1">0.8%</h3>
+                    </div>
+                    <span class="p-2 bg-amber-50 text-amber-600 rounded-lg"><i data-lucide="alert-triangle" class="w-5 h-5"></i></span>
+                </div>
+                <p class="text-xs text-slate-500 mt-2">Down from 3.0% benchmark</p>
+            </div>
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Pending Review</p>
+                        <h3 class="text-2xl font-bold text-slate-900 mt-1" id="pending-count">1 Shipment</h3>
+                    </div>
+                    <span class="p-2 bg-indigo-50 text-indigo-600 rounded-lg"><i data-lucide="file-text" class="w-5 h-5"></i></span>
+                </div>
+                <p class="text-xs text-amber-600 mt-2 font-medium">SHP-24811 requires weight check</p>
+            </div>
+        </section>
+
+        <!-- Main Navigation Tabs -->
+        <div class="border-b border-slate-200 flex space-x-6 text-sm font-medium">
+            <button onclick="switchTab('shipments')" id="tab-btn-shipments" class="pb-3 border-b-2 border-blue-600 text-blue-600 font-semibold flex items-center space-x-2">
+                <i data-lucide="list" class="w-4 h-4"></i><span>Shipment Queue</span>
+            </button>
+            <button onclick="switchTab('upload')" id="tab-btn-upload" class="pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-700 flex items-center space-x-2">
+                <i data-lucide="upload-cloud" class="w-4 h-4"></i><span>New Upload</span>
+            </button>
+            <button onclick="switchTab('analytics')" id="tab-btn-analytics" class="pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-700 flex items-center space-x-2">
+                <i data-lucide="bar-chart-3" class="w-4 h-4"></i><span>Supplier Accuracy & Audit</span>
+            </button>
+        </div>
+
+        <!-- View 1: Shipment List -->
+        <section id="view-shipments" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+                <h2 class="font-semibold text-slate-800">Nhava Sheva Clearance Shipments</h2>
+                <div class="flex space-x-2">
+                    <input type="text" placeholder="Search Shipment / Supplier..." class="px-3 py-1.5 text-xs border border-slate-300 rounded-lg w-64 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <button class="px-3 py-1.5 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition flex items-center space-x-1" onclick="switchTab('upload')">
+                        <i data-lucide="plus" class="w-3.5 h-3.5"></i><span>New Shipment</span>
+                    </button>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs text-slate-600">
+                    <thead class="bg-slate-100 uppercase text-slate-500 font-semibold border-b border-slate-200">
+                        <tr>
+                            <th class="p-3">Shipment ID</th>
+                            <th class="p-3">Supplier & Origin</th>
+                            <th class="p-3">Cargo Item</th>
+                            <th class="p-3">Qty / Value</th>
+                            <th class="p-3">AI Verification</th>
+                            <th class="p-3">Status</th>
+                            <th class="p-3 text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        <tr class="hover:bg-slate-50">
+                            <td class="p-3 font-semibold text-slate-900">SHP-24811</td>
+                            <td class="p-3">Company B (China)</td>
+                            <td class="p-3">LED panel light 40W</td>
+                            <td class="p-3">2,400 pcs / USD 16,320</td>
+                            <td class="p-3">
+                                <span class="px-2 py-0.5 rounded text-[11px] bg-amber-100 text-amber-800 font-medium">Weight Discrepancy (3120 vs 3165 kg)</span>
+                            </td>
+                            <td class="p-3"><span class="px-2 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">Action Required</span></td>
+                            <td class="p-3 text-right">
+                                <button onclick="openReview('SHP-24811')" class="px-3 py-1 bg-blue-600 text-white rounded font-medium hover:bg-blue-700">Review & Resolve</button>
+                            </td>
+                        </tr>
+                        <tr class="hover:bg-slate-50">
+                            <td class="p-3 font-semibold text-slate-900">SHP-24812</td>
+                            <td class="p-3">Company C (Sweden)</td>
+                            <td class="p-3">Steel ball valve DN50</td>
+                            <td class="p-3">180 pcs / EUR 7,650</td>
+                            <td class="p-3">
+                                <span class="px-2 py-0.5 rounded text-[11px] bg-emerald-100 text-emerald-800 font-medium">100% Match (High Conf)</span>
+                            </td>
+                            <td class="p-3"><span class="px-2 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">Ready for Export</span></td>
+                            <td class="p-3 text-right">
+                                <button onclick="openReview('SHP-24812')" class="px-3 py-1 bg-slate-100 text-slate-700 rounded font-medium hover:bg-slate-200">Inspect / Export</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- View 2: Document Upload -->
+        <section id="view-upload" class="hidden bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-6">
+            <div>
+                <h2 class="text-base font-semibold text-slate-900">Upload Shipment Documents</h2>
+                <p class="text-xs text-slate-500">Drop commercial invoice, packing list, and bill of lading (PDF/Scans/Photos) for Vision AI extraction.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-xl p-6 text-center bg-slate-50 transition flex flex-col items-center justify-center cursor-pointer">
+                    <i data-lucide="file-text" class="w-8 h-8 text-slate-400 mb-2"></i>
+                    <p class="text-xs font-semibold text-slate-700">Commercial Invoice</p>
+                    <p class="text-[11px] text-slate-400 mt-1">PDF or image up to 10MB</p>
+                </div>
+                <div class="border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-xl p-6 text-center bg-slate-50 transition flex flex-col items-center justify-center cursor-pointer">
+                    <i data-lucide="package" class="w-8 h-8 text-slate-400 mb-2"></i>
+                    <p class="text-xs font-semibold text-slate-700">Packing List</p>
+                    <p class="text-[11px] text-slate-400 mt-1">PDF or image up to 10MB</p>
+                </div>
+                <div class="border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-xl p-6 text-center bg-slate-50 transition flex flex-col items-center justify-center cursor-pointer">
+                    <i data-lucide="anchor" class="w-8 h-8 text-slate-400 mb-2"></i>
+                    <p class="text-xs font-semibold text-slate-700">Bill of Lading (B/L)</p>
+                    <p class="text-[11px] text-slate-400 mt-1">PDF or image up to 10MB</p>
+                </div>
+            </div>
+            <div class="flex justify-end space-x-3 pt-4 border-t border-slate-100">
+                <button onclick="switchTab('shipments')" class="px-4 py-2 border border-slate-300 text-xs font-semibold rounded-lg text-slate-600 hover:bg-slate-50">Cancel</button>
+                <button onclick="simulateUploadProcessing()" class="px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 flex items-center space-x-2">
+                    <i data-lucide="sparkles" class="w-4 h-4"></i><span>Run Vision AI Extraction</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- View 3: Side-by-Side Review Screen (Core Screen) -->
+        <section id="view-review" class="hidden space-y-4">
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex justify-between items-center">
+                <div>
+                    <div class="flex items-center space-x-3">
+                        <h2 class="text-lg font-bold text-slate-900" id="review-shipment-id">SHP-24811</h2>
+                        <span id="review-status-tag" class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">Action Required</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-0.5">Supplier: <span id="review-supplier-name" class="font-medium text-slate-700">Company B (China)</span> | Port of Entry: Nhava Sheva (JNPT)</p>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <button onclick="switchTab('shipments')" class="px-3 py-1.5 border border-slate-300 text-xs font-semibold rounded-lg text-slate-600 hover:bg-slate-50">Back to List</button>
+                    <button id="btn-export-csv" onclick="exportCustomsCSV()" disabled class="px-4 py-2 bg-emerald-600 text-white text-xs font-semibold rounded-lg hover:bg-emerald-700 opacity-50 cursor-not-allowed flex items-center space-x-1">
+                        <i data-lucide="download" class="w-4 h-4"></i><span>Export Filing CSV</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Side-by-Side Split View -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Left Pane: Document Viewer Simulator -->
+                <div class="bg-slate-900 rounded-xl p-4 text-white flex flex-col h-[700px]">
+                    <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-800 text-xs">
+                        <div class="flex space-x-2">
+                            <button class="px-2.5 py-1 bg-slate-800 rounded font-medium border border-slate-700 text-blue-400">Commercial Invoice</button>
+                            <button class="px-2.5 py-1 bg-slate-800 rounded font-medium text-slate-400 hover:text-white">Packing List</button>
+                            <button class="px-2.5 py-1 bg-slate-800 rounded font-medium text-slate-400 hover:text-white">Bill of Lading</button>
+                        </div>
+                        <span class="text-slate-400">Page 1 of 1 (OCR 300 DPI)</span>
+                    </div>
+                    <div class="flex-1 bg-slate-800 rounded border border-slate-700 relative overflow-hidden flex flex-col items-center justify-center p-6 text-center">
+                        <div class="absolute inset-4 border border-dashed border-slate-600 rounded p-4 flex flex-col justify-between text-left text-slate-300 font-mono text-xs">
+                            <div class="flex justify-between border-b border-slate-700 pb-2">
+                                <div>
+                                    <p class="text-slate-400">COMMERCIAL INVOICE</p>
+                                    <p class="text-white font-bold">INVOICE NO: INV-2026-881</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-slate-400">DATE: 2026-03-01</p>
+                                    <p class="text-white">CURRENCY: USD</p>
+                                </div>
+                            </div>
+                            <div class="my-4 bg-amber-500/10 border border-amber-500/50 p-3 rounded">
+                                <p class="text-amber-400 font-bold mb-1">▶ Field Extraction Bounding Box [Gross Weight]:</p>
+                                <p class="text-white font-semibold">INVOICE WEIGHT: 3,120 kg</p>
+                                <p class="text-xs text-amber-300 mt-1">Cross-check delta detected: Packing List states 3,165 kg (+45 kg mismatch)</p>
+                            </div>
+                            <div class="space-y-1">
+                                <p>ITEM: LED panel light 40W | HSN: 9405.40.90</p>
+                                <p>QTY: 2400 pcs | UNIT PRICE: USD 6.80 | TOTAL: USD 16,320.00</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Pane: Extracted Data & Cross-Checks -->
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col h-[700px] overflow-y-auto space-y-6">
+                    <!-- Cross-Check Alert Banner -->
+                    <div id="crosscheck-banner" class="bg-amber-50 border border-amber-200 p-4 rounded-xl flex items-start space-x-3">
+                        <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-600 mt-0.5 shrink-0"></i>
+                        <div>
+                            <h4 class="text-xs font-bold text-amber-900 uppercase tracking-wider">Cross-Check Mismatch Detected</h4>
+                            <p class="text-xs text-amber-700 mt-1">
+                                Invoice Gross Weight (<span class="font-semibold">3,120 kg</span>) does not match Packing List Gross Weight (<span class="font-semibold">3,165 kg</span>).
+                            </p>
+                            <button onclick="resolveWeightMismatch()" id="btn-confirm-override" class="mt-2 px-3 py-1 bg-amber-600 text-white text-xs font-semibold rounded hover:bg-amber-700">
+                                Confirm & Accept Weight Variance
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Header & Parties -->
+                    <div class="space-y-3">
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Parties & Document Header</h3>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-[11px] font-medium text-slate-500">Exporter / Supplier</label>
+                                <input type="text" id="field-supplier" value="Company B (China)" class="w-full mt-1 px-3 py-1.5 text-xs border border-slate-300 rounded-lg confidence-high">
+                            </div>
+                            <div>
+                                <label class="text-[11px] font-medium text-slate-500">Incoterm</label>
+                                <input type="text" id="field-incoterm" value="FOB Shanghai" class="w-full mt-1 px-3 py-1.5 text-xs border border-slate-300 rounded-lg confidence-high">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Line Items Table -->
+                    <div class="space-y-3">
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Extracted Line Items (HSN Code Input)</h3>
+                        <div class="border border-slate-200 rounded-lg overflow-hidden">
+                            <table class="w-full text-xs text-left">
+                                <thead class="bg-slate-50 font-semibold text-slate-600 border-b border-slate-200">
+                                    <tr>
+                                        <th class="p-2">Description</th>
+                                        <th class="p-2">HSN Code</th>
+                                        <th class="p-2">Qty</th>
+                                        <th class="p-2">Price</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="border-b border-slate-100">
+                                        <td class="p-2"><input type="text" value="LED panel light 40W" class="w-full bg-transparent"></td>
+                                        <td class="p-2"><input type="text" value="9405.40.90" class="w-full bg-transparent font-mono"></td>
+                                        <td class="p-2"><input type="number" value="2400" class="w-20 bg-transparent"></td>
+                                        <td class="p-2"><input type="text" value="USD 6.80" class="w-20 bg-transparent"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Weights & Packages Cross Check Summary -->
+                    <div class="space-y-3">
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Multi-Document Weight Integrity</h3>
+                        <div class="grid grid-cols-3 gap-3">
+                            <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 text-center">
+                                <p class="text-[11px] text-slate-500">Invoice Gross Wt</p>
+                                <p class="text-sm font-bold text-slate-800 mt-0.5">3,120 kg</p>
+                            </div>
+                            <div class="p-3 bg-amber-50 rounded-lg border border-amber-300 text-center">
+                                <p class="text-[11px] text-amber-700 font-medium">Packing List Wt</p>
+                                <p class="text-sm font-bold text-amber-900 mt-0.5">3,165 kg</p>
+                            </div>
+                            <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 text-center">
+                                <p class="text-[11px] text-slate-500">Bill of Lading Wt</p>
+                                <p class="text-sm font-bold text-slate-800 mt-0.5">3,165 kg</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- View 4: Analytics & Field Accuracy -->
+        <section id="view-analytics" class="hidden space-y-6">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4">
+                <h2 class="text-base font-semibold text-slate-900">AI Extraction Performance per Supplier</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="border border-slate-200 p-4 rounded-xl">
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="text-sm font-bold text-slate-800">Company B (China)</h3>
+                            <span class="text-xs text-amber-600 font-semibold">92.1% Field Accuracy</span>
+                        </div>
+                        <p class="text-xs text-slate-500">Frequent weight discrepancies between invoice and packing list. Requires manual manager review.</p>
+                    </div>
+                    <div class="border border-slate-200 p-4 rounded-xl">
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="text-sm font-bold text-slate-800">Company C (Sweden)</h3>
+                            <span class="text-xs text-emerald-600 font-semibold">98.9% Field Accuracy</span>
+                        </div>
+                        <p class="text-xs text-slate-500">Standardized PDF invoices. Straight-through export processing eligible.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        lucide.createIcons();
+        let currentRole = 'executive';
+
+        function switchRole(role) {
+            currentRole = role;
+            const badge = document.getElementById('role-badge');
+            if (role === 'manager') {
+                badge.innerText = 'Manager (Approver) Mode';
+                badge.className = 'px-2.5 py-1 text-xs font-medium rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30';
+            } else {
+                badge.innerText = 'Executive Mode';
+                badge.className = 'px-2.5 py-1 text-xs font-medium rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30';
+            }
+        }
+
+        function switchTab(tab) {
+            ['shipments', 'upload', 'review', 'analytics'].forEach(t => {
+                document.getElementById(`view-${t}`).classList.add('hidden');
+                const btn = document.getElementById(`tab-btn-${t}`);
+                if (btn) {
+                    btn.classList.remove('border-blue-600', 'text-blue-600', 'font-semibold');
+                    btn.classList.add('border-transparent', 'text-slate-500');
+                }
+            });
+            document.getElementById(`view-${tab}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`tab-btn-${tab}`);
+            if (activeBtn) {
+                activeBtn.classList.add('border-blue-600', 'text-blue-600', 'font-semibold');
+                activeBtn.classList.remove('border-transparent', 'text-slate-500');
+            }
+        }
+
+        function openReview(shipmentId) {
+            switchTab('review');
+            if (shipmentId === 'SHP-24812') {
+                document.getElementById('review-shipment-id').innerText = 'SHP-24812';
+                document.getElementById('review-supplier-name').innerText = 'Company C (Sweden)';
+                document.getElementById('crosscheck-banner').classList.add('hidden');
+                const btnExport = document.getElementById('btn-export-csv');
+                btnExport.disabled = false;
+                btnExport.classList.remove('opacity-50', 'cursor-not-allowed');
+            } else {
+                document.getElementById('review-shipment-id').innerText = 'SHP-24811';
+                document.getElementById('review-supplier-name').innerText = 'Company B (China)';
+                document.getElementById('crosscheck-banner').classList.remove('hidden');
+                const btnExport = document.getElementById('btn-export-csv');
+                btnExport.disabled = true;
+                btnExport.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        function resolveWeightMismatch() {
+            document.getElementById('crosscheck-banner').className = 'bg-emerald-50 border border-emerald-200 p-4 rounded-xl flex items-center justify-between';
+            document.getElementById('crosscheck-banner').innerHTML = `
+                <div class="flex items-center space-x-2 text-emerald-800 text-xs font-semibold">
+                    <i data-lucide="check-circle" class="w-4 h-4 text-emerald-600"></i>
+                    <span>Weight variance confirmed by ${currentRole === 'manager' ? 'Manager' : 'Executive'}. Ready for customs filing.</span>
+                </div>
+            `;
+            const btnExport = document.getElementById('btn-export-csv');
+            btnExport.disabled = false;
+            btnExport.classList.remove('opacity-50', 'cursor-not-allowed');
+            lucide.createIcons();
+        }
+
+        function simulateUploadProcessing() {
+            alert("Vision AI model executed! Document processing completed with 96.4% confidence score.");
+            openReview('SHP-24811');
+        }
+
+        function exportCustomsCSV() {
+            const csvContent = "data:text/csv;charset=utf-8,ShipmentID,Supplier,HSNCode,Description,Qty,UnitPrice,GrossWeightKg\nSHP-24811,Company B (China),9405.40.90,LED panel light 40W,2400,6.80,3165";
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "customs_filing_export.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>
